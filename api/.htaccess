@@ -1,0 +1,38 @@
+# ============================================================
+# Apache .htaccess for Siddhivinayak Tours PHP API
+# Place this inside the /api/ directory on XAMPP
+# ============================================================
+
+# Allow all requests to PHP files
+<FilesMatch "\.php$">
+    Require all granted
+</FilesMatch>
+
+# Handle CORS preflight OPTIONS requests & pass Authorization header to PHP
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Set JSON content type header for all API responses
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-Auth-Token"
+    Header always set Access-Control-Max-Age "86400"
+</IfModule>
+
+# Disable directory browsing for security
+Options -Indexes
+
+# Prevent direct access to config files
+<Files "*.php">
+    Require all granted
+</Files>
+
+# Block access to hidden files (like .env)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

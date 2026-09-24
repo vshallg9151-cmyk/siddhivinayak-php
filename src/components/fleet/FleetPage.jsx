@@ -35,6 +35,15 @@ export default function FleetPage({
   const [selectedCarForBookingModal, setSelectedCarForBookingModal] = useState(null);
   const [selectedCarForCalendarModal, setSelectedCarForCalendarModal] = useState(null);
 
+  const [dbVehicles, setDbVehicles] = useState([]);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      setDbVehicles(await vehicleDB.getVehicles());
+    };
+    fetchVehicles();
+  }, []);
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedCategory('All Cars');
@@ -48,9 +57,8 @@ export default function FleetPage({
 
   // Filter & Sort Logic
   const filteredCars = useMemo(() => {
-    const dbCars = vehicleDB.getVehicles();
     const mergedCars = FLEET_CARS.map(c => {
-      const dbMatch = dbCars.find(dbc => dbc.name === c.name || dbc.id === c.id);
+      const dbMatch = dbVehicles.find(dbc => dbc.name === c.name || dbc.id === c.id);
       return dbMatch ? { ...c, ...dbMatch, image: dbMatch.images[0] || c.image } : c;
     });
 

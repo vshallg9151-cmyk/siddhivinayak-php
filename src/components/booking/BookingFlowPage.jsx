@@ -88,20 +88,23 @@ export default function BookingFlowPage({ car: propCar, initialRentalType, onNav
 
   // Check live availability on vehicle or dates change
   useEffect(() => {
-    if (car?.id) {
-      const avail = vehicleAvailabilityService.isVehicleAvailable(
-        car.id,
-        pickupDate,
-        pickupTime,
-        returnDate,
-        returnTime
-      );
-      if (!avail.available && avail.reason !== 'Vehicle not found.') {
-        setAvailabilityWarning(avail.reason || 'Sorry, this vehicle is no longer available for the selected dates.');
-      } else {
-        setAvailabilityWarning('');
+    const checkAvailability = async () => {
+      if (car?.id) {
+        const avail = await vehicleAvailabilityService.isVehicleAvailable(
+          car.id,
+          pickupDate,
+          pickupTime,
+          returnDate,
+          returnTime
+        );
+        if (!avail.available && avail.reason !== 'Vehicle not found.') {
+          setAvailabilityWarning(avail.reason || 'Sorry, this vehicle is no longer available for the selected dates.');
+        } else {
+          setAvailabilityWarning('');
+        }
       }
-    }
+    };
+    checkAvailability();
   }, [car, pickupDate, pickupTime, returnDate, returnTime]);
 
   const steps = [
@@ -126,7 +129,7 @@ export default function BookingFlowPage({ car: propCar, initialRentalType, onNav
         return;
       }
       // Re-verify availability
-      const availCheck = vehicleAvailabilityService.isVehicleAvailable(car.id, pickupDate, pickupTime, returnDate, returnTime);
+      const availCheck = await vehicleAvailabilityService.isVehicleAvailable(car.id, pickupDate, pickupTime, returnDate, returnTime);
       if (!availCheck.available) {
         setHasSubmittedError(true);
         setDocErrorMessage(availCheck.reason || 'Sorry, this vehicle is no longer available for the selected dates.');
@@ -223,7 +226,7 @@ export default function BookingFlowPage({ car: propCar, initialRentalType, onNav
       }
 
       // Live Concurrency Check
-      const liveCheck = vehicleAvailabilityService.isVehicleAvailable(
+      const liveCheck = await vehicleAvailabilityService.isVehicleAvailable(
         car.id,
         pickupDate,
         pickupTime,

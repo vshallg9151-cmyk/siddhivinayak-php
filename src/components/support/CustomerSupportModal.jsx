@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, PhoneCall, HelpCircle, Send, CheckCircle2, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
 import { SUPPORT_FAQS } from '../../data/phase5Data';
-import { DISPLAY_PHONE, formatWhatsAppURL } from '../../utils/whatsappHelper';
+import { apiClient } from '../../services/apiClient';
+import { API_ENDPOINTS } from '../../config/apiConfig';
 
 export default function CustomerSupportModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('ticket'); // 'ticket' | 'faq' | 'call'
@@ -14,8 +15,20 @@ export default function CustomerSupportModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleTicketSubmit = (e) => {
+  const handleTicketSubmit = async (e) => {
     e.preventDefault();
+    try {
+      await apiClient.post(API_ENDPOINTS.CONTACT_SUBMIT, {
+        name: 'Website Traveler',
+        phone: '9173746558',
+        email: 'traveler@siddhivinayak.com',
+        subject: ticketSubject || 'Customer Support Ticket',
+        message: ticketMsg,
+        source: '24/7 Customer Support Portal'
+      });
+    } catch (err) {
+      console.warn('Support ticket submit fallback:', err.message);
+    }
     setTicketSubmitted(true);
     setTimeout(() => {
       setTicketSubmitted(false);

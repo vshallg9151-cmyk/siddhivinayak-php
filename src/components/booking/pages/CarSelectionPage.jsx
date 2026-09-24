@@ -12,8 +12,17 @@ export default function CarSelectionPage({ onNavigate }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Get fleet cars from DB or fallback mock
-  const availableCars = vehicleDB.getVehicles() || FLEET_CARS;
+  const [availableCars, setAvailableCars] = useState(FLEET_CARS);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      const dbCars = await vehicleDB.getVehicles();
+      if (dbCars && dbCars.length > 0) {
+        setAvailableCars(dbCars);
+      }
+    };
+    fetchVehicles();
+  }, []);
 
   const categories = ['All', ...new Set(availableCars.map((c) => c.category).filter(Boolean))];
 

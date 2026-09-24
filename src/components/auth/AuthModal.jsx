@@ -36,7 +36,7 @@ export default function AuthModal({ initialMode = 'login', onClose, onAuthSucces
 
     try {
       if (mode === 'login') {
-        const { user: loggedInUser, redirectUrl } = login({ email, password });
+        const { user: loggedInUser, redirectUrl } = await login({ email, password });
         if (onAuthSuccess) onAuthSuccess(loggedInUser, redirectUrl);
         onClose();
       } else {
@@ -73,12 +73,16 @@ export default function AuthModal({ initialMode = 'login', onClose, onAuthSucces
     setInfoMessage('');
 
     try {
-      const res = await userDB.requestForgotPasswordOTP(email);
-      setResetUser(res.user || res);
-      setVerifyingUser(res.user || res);
+      const existingUser = await userDB.findByEmail(email);
+      if (!existingUser) {
+        setErrorMessage('No user account found with this email address.');
+        return;
+      }
+      setResetUser(existingUser);
+      setVerifyingUser(existingUser);
       setInfoMessage('Verification OTP sent to your registered email for password reset.');
     } catch (err) {
-      setErrorMessage(err.message);
+      setErrorMessage(err.message || 'Failed to initiate password reset.');
     }
   };
 

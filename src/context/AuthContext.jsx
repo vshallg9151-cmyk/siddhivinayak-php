@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userDB, PREDEFINED_SUPER_ADMIN } from '../services/userDatabase';
-import { generateToken, verifyToken, comparePassword } from '../services/jwtAuth';
+import { generateToken, verifyToken } from '../services/jwtAuth';
 
 const AuthContext = createContext();
 
@@ -89,50 +89,22 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * Secure Login Procedure with Dual Verification Enforcement
+   * Secure Login Procedure via PHP MySQL API Layer
    */
-  const login = ({ email, password }) => {
-    const identifier = email ? email.toString().trim() : '';
-    const dbUser = userDB.getUserByIdentifier(identifier);
-
-    if (!dbUser) {
-      throw new Error('Invalid email, mobile number, or password.');
-    }
-
-    const isMatch = comparePassword(password, dbUser.password);
-    if (!isMatch) {
-      throw new Error('Invalid email, mobile number, or password.');
-    }
-
-    if (!dbUser.emailVerified) {
-      const err = new Error('Please verify your email address to continue.');
-      err.unverifiedUser = dbUser;
-      err.verificationType = 'EMAIL';
+  const login = async ({ email, password }) => {
+    try {
+      const result = await userDB.login({ email, password });
+      setUser(result.user);
+      setToken(result.token);
+      triggerPendingIntentResume();
+      return result;
+    } catch (err) {
       throw err;
     }
-
-    if (dbUser.status !== 'ACTIVE') {
-      throw new Error('Your account has been deactivated. Please contact the Super Admin.');
-    }
-
-    const jwtToken = generateToken(dbUser);
-    setUser(dbUser);
-    setToken(jwtToken);
-
-    triggerPendingIntentResume();
-
-    let redirectUrl = '/user/dashboard';
-    if (dbUser.role === 'SUPER_ADMIN') {
-      redirectUrl = '/super-admin/dashboard';
-    } else if (dbUser.role === 'ADMIN') {
-      redirectUrl = '/admin/dashboard';
-    }
-
-    return { user: dbUser, token: jwtToken, redirectUrl };
   };
 
   /**
-   * Public Registration Procedure
+   * Public Registration Procedure via PHP MySQL API Layer
    */
   const register = async ({ name, email, mobile, password, confirmPassword }) => {
     if (password !== confirmPassword) {
@@ -143,14 +115,14 @@ export function AuthProvider({ children }) {
       throw new Error('Password must be at least 6 characters long.');
     }
 
-    const { user: unverifiedUser, emailDelivery, mobileDelivery } = await userDB.registerUser({ name, email, mobile, password });
-    return { user: unverifiedUser, requiresVerification: true, emailDelivery, mobileDelivery };
+    const { user: unverifiedUser, emailDelivery } = await userDB.registerUser({ name, email, mobile, password, confirmPassword });
+    return { user: unverifiedUser, requiresVerification: true, emailDelivery };
   };
 
   /**
    * 1-Click Test Login Presets
    */
-  const loginAsPreset = (roleType) => {
+  const loginAsPreset = async (roleType) => {
     let targetEmail = 'rahul.sharma@example.com';
     let targetPass = 'user123';
 
@@ -162,7 +134,7 @@ export function AuthProvider({ children }) {
       targetPass = 'admin123';
     }
 
-    return login({ email: targetEmail, password: targetPass });
+    return await login({ email: targetEmail, password: targetPass });
   };
 
   /**

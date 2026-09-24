@@ -58,22 +58,25 @@ export default function VehicleBookingModal({ vehicle, searchParams = {}, onClos
 
   // Recalculate live availability whenever dates or vehicle change
   useEffect(() => {
-    if (vehicle) {
-      const dateCheck = validateBookingDates(pickupDate, pickupTime, returnDate, returnTime);
-      if (!dateCheck.valid) {
-        setAvailCheck({ available: false, reason: dateCheck.error });
-        return;
-      }
+    const checkAvailability = async () => {
+      if (vehicle) {
+        const dateCheck = validateBookingDates(pickupDate, pickupTime, returnDate, returnTime);
+        if (!dateCheck.valid) {
+          setAvailCheck({ available: false, reason: dateCheck.error });
+          return;
+        }
 
-      const check = vehicleAvailabilityService.isVehicleAvailable(
-        vehicle.id,
-        pickupDate,
-        pickupTime,
-        returnDate,
-        returnTime
-      );
-      setAvailCheck(check);
-    }
+        const check = await vehicleAvailabilityService.isVehicleAvailable(
+          vehicle.id,
+          pickupDate,
+          pickupTime,
+          returnDate,
+          returnTime
+        );
+        setAvailCheck(check);
+      }
+    };
+    checkAvailability();
   }, [vehicle, pickupDate, pickupTime, returnDate, returnTime]);
 
   const handleConfirmBooking = async (e) => {
@@ -103,7 +106,7 @@ export default function VehicleBookingModal({ vehicle, searchParams = {}, onClos
     }
 
     // 4. Re-verify availability to prevent double-booking race conditions
-    const finalCheck = vehicleAvailabilityService.isVehicleAvailable(
+    const finalCheck = await vehicleAvailabilityService.isVehicleAvailable(
       vehicle.id,
       pickupDate,
       pickupTime,

@@ -16,7 +16,16 @@ export default function VehicleAvailabilityCalendar({ vehicle, onClose }) {
   const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sunday
 
   // Fetch active bookings for this vehicle
-  const vehicleBookings = bookingDB.getBookingsForVehicle(vehicle.id);
+  const [vehicleBookings, setVehicleBookings] = useState([]);
+  
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (vehicle?.id) {
+        setVehicleBookings(await bookingDB.getBookingsForVehicle(vehicle.id));
+      }
+    };
+    fetchBookings();
+  }, [vehicle]);
 
   // Helper to check status of a specific day
   const getDayStatus = (day) => {

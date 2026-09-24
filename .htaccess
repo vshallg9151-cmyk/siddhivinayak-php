@@ -1,0 +1,32 @@
+# ============================================================
+# Apache .htaccess for Siddhivinayak Tours - Root Directory
+# Used when serving React dist/ via XAMPP htdocs
+# ============================================================
+
+RewriteEngine On
+
+# Serve static files directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all other requests to React index.html (for client-side routing)
+RewriteRule ^ index.html [L]
+
+# Disable directory listing for security
+Options -Indexes
+
+# Block access to hidden files (like .env, .git, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block access to sensitive backend config files
+<FilesMatch "\.(json|lock|md|txt|log|bak|sh|bat|ps1|sql)$">
+    Require all denied
+</FilesMatch>
+
+# Allow access to PHP config for API
+<Files "*.php">
+    Require all granted
+</Files>

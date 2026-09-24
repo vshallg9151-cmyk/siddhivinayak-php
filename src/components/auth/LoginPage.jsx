@@ -52,7 +52,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
 
     try {
       if (mode === 'login') {
-        const { user: loggedInUser, redirectUrl } = login({ email, password });
+        const { user: loggedInUser, redirectUrl } = await login({ email, password });
         if (onAuthSuccess) onAuthSuccess(loggedInUser, redirectUrl);
         else if (onNavigate) onNavigate('booking', null, loggedInUser);
       } else {
@@ -93,7 +93,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
         return;
       }
 
-      const existingUser = userDB.findByEmail(email);
+      const existingUser = await userDB.findByEmail(email);
       if (!existingUser) {
         setErrorMessage('No user account found with this email address.');
         setLoading(false);
@@ -108,7 +108,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
     }
   };
 
-  const handleSetNewPasswordSubmit = (e) => {
+  const handleSetNewPasswordSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
@@ -122,7 +122,7 @@ export default function LoginPage({ onNavigate, onAuthSuccess }) {
     }
 
     try {
-      userDB.updateUser(resetUser.id, { password: newPassword });
+      await userDB.resetPassword({ userId: resetUser.id, newPassword });
       setInfoMessage('Password successfully reset! Please log in with your new password.');
       setForgotPasswordView(false);
       setResetPasswordStep(false);

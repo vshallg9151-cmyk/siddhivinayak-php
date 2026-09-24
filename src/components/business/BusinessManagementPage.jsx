@@ -20,19 +20,36 @@ export default function BusinessManagementPage({ onExitPortal }) {
   const [activeTab, setActiveTab] = useState('bi'); // 'bi' | 'employees' | 'vendors' | 'drivers' | 'guides' | 'inventory' | 'accounting' | 'workflows' | 'documents'
 
   // Live Database Sync for Authoritative Analytics & Business Records
-  const [realBookings] = useState(() => bookingDB.getBookings());
-  const [realUsers] = useState(() => userDB.getUsers());
-  const [realVehicles] = useState(() => vehicleDB.getVehicles());
+  const [realBookings, setRealBookings] = useState([]);
+  const [realUsers, setRealUsers] = useState([]);
+  const [realVehicles, setRealVehicles] = useState([]);
 
   // Persistent Datasets Connected to businessDB
-  const [employees, setEmployees] = useState(() => businessDB.getStaff());
-  const [vendors, setVendors] = useState(() => businessDB.getVendors());
-  const [drivers, setDrivers] = useState(() => businessDB.getDrivers());
-  const [guides, setGuides] = useState(() => businessDB.getGuides());
-  const [inventory] = useState(() => businessDB.getInventory());
-  const [ledger] = useState(() => businessDB.getLedger());
+  const [employees, setEmployees] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [guides, setGuides] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [ledger, setLedger] = useState([]);
   const [workflows, setWorkflows] = useState(MOCK_WORKFLOWS);
-  const [documents] = useState(() => businessDB.getDocuments());
+  const [documents, setDocuments] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setRealBookings(await bookingDB.getBookings());
+      setRealUsers(await userDB.getUsers());
+      setRealVehicles(await vehicleDB.getVehicles());
+
+      setEmployees(await businessDB.getStaff());
+      setVendors(await businessDB.getVendors());
+      setDrivers(await businessDB.getDrivers());
+      setGuides(await businessDB.getGuides());
+      setInventory(await businessDB.getInventory());
+      setLedger(await businessDB.getLedger());
+      setDocuments(await businessDB.getDocuments());
+    };
+    fetchData();
+  }, []);
 
   // Dynamic Realtime BI Analytics Calculations
   const paidBookingsRev = realBookings.reduce((sum, b) => {
