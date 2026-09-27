@@ -26,19 +26,19 @@ export default function FleetSection({ onBookNowTriggered }) {
   };
 
   return (
-    <section id="fleet" className="py-20 bg-brand-bgLight relative">
+    <section id="fleet" className="py-20 bg-slate-50 relative border-t border-slate-200/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Title */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
           <div>
-            <span className="text-xs font-extrabold uppercase tracking-widest text-brand-blue bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-700 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-200/70 inline-block shadow-sm">
               Our Premium Fleet
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-navy mt-3 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-brand-navy mt-3 tracking-tight">
               Explore Available Vehicles
             </h2>
-            <p className="text-slate-600 text-sm mt-2 max-w-xl">
+            <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-xl font-normal leading-relaxed">
               100% Sanitized, accident-free, and regularly serviced vehicles with All-India tourist permits and comprehensive insurance.
             </p>
           </div>
@@ -49,14 +49,14 @@ export default function FleetSection({ onBookNowTriggered }) {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-300 whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                   activeCategory === cat
-                    ? 'bg-brand-navy text-brand-gold shadow-luxury border border-brand-gold/30'
-                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    ? 'bg-brand-navy text-amber-400 shadow-md border border-amber-500/40 ring-1 ring-amber-500/20'
+                    : 'bg-white text-slate-700 hover:text-brand-navy hover:bg-slate-100 border border-slate-200/90 shadow-sm'
                 }`}
               >
                 <span>{cat === 'All' ? 'All Vehicles' : cat}</span>
-                {activeCategory === cat && <Check className="w-3.5 h-3.5 text-brand-gold" />}
+                {activeCategory === cat && <Check className="w-3.5 h-3.5 text-amber-400 stroke-[3]" />}
               </button>
             ))}
           </div>
@@ -84,7 +84,9 @@ export default function FleetSection({ onBookNowTriggered }) {
           onClose={() => setSelectedCarForModal(null)}
           onConfirmBooking={(car, details) => {
             setSelectedCarForModal(null);
-            onBookNowTriggered(car, details);
+            if (onBookNowTriggered) {
+              onBookNowTriggered(car, details);
+            }
           }}
         />
       )}

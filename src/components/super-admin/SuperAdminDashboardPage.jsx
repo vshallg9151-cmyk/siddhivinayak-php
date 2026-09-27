@@ -62,20 +62,20 @@ export default function SuperAdminDashboardPage({ onExit }) {
   const [cityFilterQuery, setCityFilterQuery] = useState('');
 
   // Load database records
-  const refreshUsers = () => {
-    setUsersList(userDB.getUsers());
+  const refreshUsers = async () => {
+    setUsersList(await userDB.getUsers());
   };
 
-  const refreshBookings = () => {
-    setBookingsList(bookingDB.getBookings());
+  const refreshBookings = async () => {
+    setBookingsList(await bookingDB.getBookings());
   };
 
-  const refreshCities = () => {
-    setCitiesList(cityDB.getAllCitiesForAdmin());
+  const refreshCities = async () => {
+    setCitiesList(await cityDB.getAllCitiesForAdmin());
   };
 
-  const refreshFleet = () => {
-    const vehicles = vehicleDB.getVehicles();
+  const refreshFleet = async () => {
+    const vehicles = await vehicleDB.getVehicles();
     setFleetList(vehicles);
 
     const pMap = {};
@@ -95,7 +95,7 @@ export default function SuperAdminDashboardPage({ onExit }) {
     refreshFleet();
   }, []);
 
-  const handleUpdatePrice = (vehicleId) => {
+  const handleUpdatePrice = async (vehicleId) => {
     try {
       const newPrice = Number(editPriceMap[vehicleId]);
       const newDeposit = Number(editDepositMap[vehicleId] || 5000);
@@ -105,12 +105,12 @@ export default function SuperAdminDashboardPage({ onExit }) {
         return;
       }
 
-      vehicleDB.updateVehicle(vehicleId, {
+      await vehicleDB.updateVehicle(vehicleId, {
         pricePerDay: newPrice,
         securityDeposit: newDeposit
       });
 
-      refreshFleet();
+      await refreshFleet();
       setPriceSuccessMsg(`✓ Price updated successfully! New Daily Rate: ₹${newPrice.toLocaleString()}/day`);
       setTimeout(() => setPriceSuccessMsg(''), 4000);
     } catch (err) {
@@ -118,12 +118,12 @@ export default function SuperAdminDashboardPage({ onExit }) {
     }
   };
 
-  const handleAddVehicleSubmit = (e) => {
+  const handleAddVehicleSubmit = async (e) => {
     e.preventDefault();
     if (!newVehName) return;
 
     try {
-      vehicleDB.addVehicle({
+      await vehicleDB.addVehicle({
         name: newVehName,
         category: newVehCategory,
         pricePerDay: Number(newVehPrice),
@@ -135,7 +135,7 @@ export default function SuperAdminDashboardPage({ onExit }) {
         images: newVehImage ? [newVehImage] : ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80']
       });
 
-      refreshFleet();
+      await refreshFleet();
       setShowAddVehicleModal(false);
       setNewVehName('');
       setNewVehImage('');
@@ -182,37 +182,41 @@ export default function SuperAdminDashboardPage({ onExit }) {
   };
 
   // Handle City Save (Add / Edit)
-  const handleSaveCitySubmit = (e) => {
+  const handleSaveCitySubmit = async (e) => {
     e.preventDefault();
     if (!cityName.trim() || !cityState.trim()) return;
 
-    if (editingCityId) {
-      cityDB.updateCity(editingCityId, {
-        name: cityName,
-        district: cityDistrict || cityName,
-        state: cityState,
-        popular: cityPopular,
-        status: cityStatus
-      });
-    } else {
-      cityDB.addCity({
-        name: cityName,
-        district: cityDistrict || cityName,
-        state: cityState,
-        popular: cityPopular,
-        status: cityStatus
-      });
-    }
+    try {
+      if (editingCityId) {
+        await cityDB.updateCity(editingCityId, {
+          name: cityName,
+          district: cityDistrict || cityName,
+          state: cityState,
+          popular: cityPopular,
+          status: cityStatus
+        });
+      } else {
+        await cityDB.addCity({
+          name: cityName,
+          district: cityDistrict || cityName,
+          state: cityState,
+          popular: cityPopular,
+          status: cityStatus
+        });
+      }
 
-    // Reset Form
-    setShowCityModal(false);
-    setEditingCityId(null);
-    setCityName('');
-    setCityDistrict('');
-    setCityState('');
-    setCityPopular(false);
-    setCityStatus('AVAILABLE');
-    refreshCities();
+      // Reset Form
+      setShowCityModal(false);
+      setEditingCityId(null);
+      setCityName('');
+      setCityDistrict('');
+      setCityState('');
+      setCityPopular(false);
+      setCityStatus('AVAILABLE');
+      await refreshCities();
+    } catch (err) {
+      alert(err.message || 'Failed to save city');
+    }
   };
 
   const handleOpenEditCity = (city) => {
@@ -225,38 +229,50 @@ export default function SuperAdminDashboardPage({ onExit }) {
     setShowCityModal(true);
   };
 
-  const handleTogglePopular = (city) => {
-    cityDB.updateCity(city.id, { popular: !city.popular });
-    refreshCities();
+  const handleTogglePopular = async (city) => {
+    try {
+      await cityDB.updateCity(city.id, { popular: !city.popular });
+      await refreshCities();
+    } catch (err) {
+      alert(err.message || 'Failed to update city');
+    }
   };
 
-  const handleToggleStatus = (city, nextStatus) => {
-    cityDB.updateCity(city.id, { status: nextStatus });
-    refreshCities();
+  const handleToggleStatus = async (city, nextStatus) => {
+    try {
+      await cityDB.updateCity(city.id, { status: nextStatus });
+      await refreshCities();
+    } catch (err) {
+      alert(err.message || 'Failed to update city status');
+    }
   };
 
-  const handleDeleteCity = (cityId) => {
+  const handleDeleteCity = async (cityId) => {
     if (!window.confirm('Are you sure you want to delete this city?')) return;
-    cityDB.deleteCity(cityId);
-    refreshCities();
+    try {
+      await cityDB.deleteCity(cityId);
+      await refreshCities();
+    } catch (err) {
+      alert(err.message || 'Failed to delete city');
+    }
   };
 
   // Toggle User Status
-  const handleToggleUserStatus = (userId) => {
+  const handleToggleUserStatus = async (userId) => {
     try {
-      userDB.toggleUserStatus(userId);
-      refreshUsers();
+      await userDB.toggleUserStatus(userId);
+      await refreshUsers();
     } catch (err) {
       alert(err.message);
     }
   };
 
   // Delete User / Admin
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this account?')) return;
     try {
-      userDB.deleteUser(userId);
-      refreshUsers();
+      await userDB.deleteUser(userId);
+      await refreshUsers();
     } catch (err) {
       alert(err.message);
     }
@@ -752,9 +768,13 @@ export default function SuperAdminDashboardPage({ onExit }) {
                       <td className="py-3.5 px-4 text-right space-x-2">
                         {b.bookingStatus !== 'CONFIRMED' && (
                           <button
-                            onClick={() => {
-                              bookingDB.updateBookingStatus(b.bookingId, 'CONFIRMED');
-                              refreshBookings();
+                            onClick={async () => {
+                              try {
+                                await bookingDB.updateBookingStatus(b.bookingId, 'CONFIRMED');
+                                await refreshBookings();
+                              } catch (err) {
+                                alert(err.message || 'Failed to confirm booking');
+                              }
                             }}
                             className="px-2 py-1 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-[10px] font-bold rounded"
                           >
@@ -763,9 +783,13 @@ export default function SuperAdminDashboardPage({ onExit }) {
                         )}
                         {b.bookingStatus !== 'CANCELLED' && (
                           <button
-                            onClick={() => {
-                              bookingDB.updateBookingStatus(b.bookingId, 'CANCELLED');
-                              refreshBookings();
+                            onClick={async () => {
+                              try {
+                                await bookingDB.updateBookingStatus(b.bookingId, 'CANCELLED');
+                                await refreshBookings();
+                              } catch (err) {
+                                alert(err.message || 'Failed to cancel booking');
+                              }
                             }}
                             className="px-2 py-1 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-[10px] font-bold rounded"
                           >

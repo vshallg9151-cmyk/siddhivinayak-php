@@ -70,11 +70,11 @@ export default function DateTimePage({ onNavigate }) {
 
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-4xl font-serif text-white flex items-center gap-2">
             <Calendar className="w-7 h-7 text-amber-400" />
             Step 3: Travel Date & Time Selection
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-medium">
+          <p className="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
             Select your travel start date, time, and return schedule.
           </p>
         </div>
@@ -90,9 +90,9 @@ export default function DateTimePage({ onNavigate }) {
         <form onSubmit={handleNext} className="space-y-8">
           
           {/* Booking Summary Box from Step 2 */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-[#0B192C]/85 backdrop-blur-xl border border-white/15 rounded-3xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
+              <div className="p-3 bg-amber-400/10 text-amber-400 rounded-2xl border border-amber-400/20">
                 <MapPin className="w-5 h-5" />
               </div>
               <div>
@@ -120,14 +120,14 @@ export default function DateTimePage({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate('booking')}
-              className="text-xs text-amber-400 font-extrabold hover:underline"
+              className="text-xs text-amber-400 font-bold hover:underline cursor-pointer"
             >
               Edit Details
             </button>
           </div>
 
           {/* Interactive Date & Time Picker */}
-          <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+          <div className="bg-[#0B192C]/85 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
             <h2 className="text-sm font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4" /> Pick Travel Dates & Duration
             </h2>
@@ -144,7 +144,7 @@ export default function DateTimePage({ onNavigate }) {
             />
 
             {/* Price Duration Preview */}
-            <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between text-xs">
+            <div className="p-4 bg-[#060D17] border border-slate-800 rounded-2xl flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-400" />
                 <span className="text-slate-300 font-bold">Total Rental Duration:</span>
@@ -159,7 +159,7 @@ export default function DateTimePage({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate('booking')}
-              className="px-6 py-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-extrabold text-xs transition-all flex items-center gap-2"
+              className="px-6 py-3.5 rounded-full bg-[#060D17] border border-slate-700 hover:bg-slate-900 text-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Booking Details
@@ -167,7 +167,7 @@ export default function DateTimePage({ onNavigate }) {
 
             <button
               type="submit"
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/20 transition-all flex items-center gap-2 hover:scale-[1.02]"
+              className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all flex items-center gap-2 hover:scale-[1.02] cursor-pointer"
             >
               Continue to Car Selection
               <ArrowRight className="w-5 h-5" />

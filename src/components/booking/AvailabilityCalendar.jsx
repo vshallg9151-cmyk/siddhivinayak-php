@@ -26,16 +26,19 @@ export default function AvailabilityCalendar({
   const [activeBookings, setActiveBookings] = useState([]);
 
   useEffect(() => {
-    try {
-      const allBookings = bookingDB.getBookings() || [];
-      // Filter only CONFIRMED or PENDING active reservations
-      const active = allBookings.filter(
-        (b) => b.bookingStatus === 'CONFIRMED' || b.bookingStatus === 'PAID' || b.bookingStatus === 'PENDING'
-      );
-      setActiveBookings(active);
-    } catch (err) {
-      setActiveBookings([]);
-    }
+    const fetchBookings = async () => {
+      try {
+        const allBookings = await bookingDB.getBookings() || [];
+        // Filter only CONFIRMED or PENDING active reservations
+        const active = allBookings.filter(
+          (b) => b.bookingStatus === 'CONFIRMED' || b.bookingStatus === 'PAID' || b.bookingStatus === 'PENDING'
+        );
+        setActiveBookings(active);
+      } catch (err) {
+        setActiveBookings([]);
+      }
+    };
+    fetchBookings();
   }, []);
 
   const handlePrevMonth = () => {

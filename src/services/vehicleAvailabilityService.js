@@ -23,8 +23,8 @@ class VehicleAvailabilityService {
   /**
    * Check if a specific vehicle is available for a date & time range
    */
-  isVehicleAvailable(vehicleId, pickupDate, pickupTime = '10:00', returnDate, returnTime = '18:00') {
-    const vehicle = vehicleDB.getVehicleById(vehicleId);
+  async isVehicleAvailable(vehicleId, pickupDate, pickupTime = '10:00', returnDate, returnTime = '18:00') {
+    const vehicle = await vehicleDB.getVehicleById(vehicleId);
 
     if (!vehicle) {
       return { available: false, reason: 'Vehicle not found.' };
@@ -39,7 +39,7 @@ class VehicleAvailabilityService {
     }
 
     // Check active non-cancelled bookings for overlapping dates & times
-    const existingBookings = bookingDB.getBookingsForVehicle(vehicleId);
+    const existingBookings = await bookingDB.getBookingsForVehicle(vehicleId);
     const reqStart = parseDateTime(pickupDate, pickupTime);
     const reqEnd = parseDateTime(returnDate, returnTime);
 
@@ -61,10 +61,10 @@ class VehicleAvailabilityService {
   /**
    * Search all vehicles with computed live status for given criteria
    */
-  searchAvailableVehicles({ city, pickupDate, pickupTime = '10:00', returnDate, returnTime = '18:00', category }) {
-    const allVehicles = vehicleDB.getVehicles();
+  async searchAvailableVehicles({ city, pickupDate, pickupTime = '10:00', returnDate, returnTime = '18:00', category }) {
+    const allVehicles = await vehicleDB.getVehicles();
 
-    return allVehicles.map(veh => {
+    return Promise.all(allVehicles.map(async veh => {
       // Location match check (if city provided)
       const locationMatch = !city || veh.location.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(veh.location.toLowerCase());
       
@@ -72,7 +72,7 @@ class VehicleAvailabilityService {
       const categoryMatch = !category || category === 'ALL' || veh.category.toLowerCase().includes(category.toLowerCase());
 
       // Live Availability check
-      const availCheck = this.isVehicleAvailable(veh.id, pickupDate, pickupTime, returnDate, returnTime);
+      const availCheck = await this.isVehicleAvailable(veh.id, pickupDate, pickupTime, returnDate, returnTime);
 
       return {
         ...veh,
@@ -81,7 +81,7 @@ class VehicleAvailabilityService {
         isLiveAvailable: availCheck.available,
         unavailabilityReason: availCheck.reason
       };
-    });
+    }));
   }
 
   /**

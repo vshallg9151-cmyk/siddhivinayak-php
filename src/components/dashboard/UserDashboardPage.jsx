@@ -14,9 +14,9 @@ export default function UserDashboardPage({ savedTrips = [], wishlist = [], onNa
   const [userBookings, setUserBookings] = useState([]);
   const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
 
-  const refreshUserBookings = () => {
+  const refreshUserBookings = async () => {
     if (user) {
-      const records = bookingDB.getUserBookings(user.id, user.email);
+      const records = await bookingDB.getUserBookings(user.id, user.email);
       setUserBookings(records);
     }
   };
@@ -25,10 +25,14 @@ export default function UserDashboardPage({ savedTrips = [], wishlist = [], onNa
     refreshUserBookings();
   }, [user]);
 
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking? This will release the vehicle for other travelers.')) return;
-    bookingDB.cancelBooking(bookingId);
-    refreshUserBookings();
+    try {
+      await bookingDB.cancelBooking(bookingId);
+      await refreshUserBookings();
+    } catch (err) {
+      alert(err.message || 'Failed to cancel booking');
+    }
   };
 
   const upcomingBookings = userBookings.filter(b => b.bookingStatus === 'CONFIRMED' || b.bookingStatus === 'PENDING');

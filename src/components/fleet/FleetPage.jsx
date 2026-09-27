@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FLEET_CARS } from '../../data/mockData';
 import FleetCard from './FleetCard';
 import FilterPanel from './FilterPanel';
@@ -35,6 +35,15 @@ export default function FleetPage({
   const [selectedCarForBookingModal, setSelectedCarForBookingModal] = useState(null);
   const [selectedCarForCalendarModal, setSelectedCarForCalendarModal] = useState(null);
 
+  const [dbVehicles, setDbVehicles] = useState([]);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      setDbVehicles(await vehicleDB.getVehicles());
+    };
+    fetchVehicles();
+  }, []);
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedCategory('All Cars');
@@ -48,9 +57,8 @@ export default function FleetPage({
 
   // Filter & Sort Logic
   const filteredCars = useMemo(() => {
-    const dbCars = vehicleDB.getVehicles();
     const mergedCars = FLEET_CARS.map(c => {
-      const dbMatch = dbCars.find(dbc => dbc.name === c.name || dbc.id === c.id);
+      const dbMatch = dbVehicles.find(dbc => dbc.name === c.name || dbc.id === c.id);
       return dbMatch ? { ...c, ...dbMatch, image: dbMatch.images[0] || c.image } : c;
     });
 
@@ -83,30 +91,30 @@ export default function FleetPage({
       if (sortBy === 'rating') return (b.rating || 4.9) - (a.rating || 4.9);
       return (b.reviewsCount || 100) - (a.reviewsCount || 100);
     });
-  }, [searchTerm, selectedCategory, selectedFuelTypes, selectedTransmissions, selectedSeats, maxPrice, selectedCity, sortBy]);
+  }, [searchTerm, selectedCategory, selectedFuelTypes, selectedTransmissions, selectedSeats, maxPrice, selectedCity, sortBy, dbVehicles]);
 
   const handleTriggerBooking = (car) => {
     setSelectedCarForBookingModal(car);
   };
 
   return (
-    <div className="pt-24 pb-20 bg-brand-bgLight min-h-screen">
+    <div className="pt-24 pb-20 bg-slate-50 min-h-screen text-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb */}
         <Breadcrumb items={[{ label: 'Our Fleet' }]} onNavigate={onNavigate} />
 
         {/* Page Top Heading */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-slate-200 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-slate-200/80 pb-8">
           <div>
-            <span className="text-xs font-extrabold uppercase tracking-widest text-brand-blue bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-700 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-200/70 inline-block shadow-sm">
               India's Premier Vehicle Rentals
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black text-brand-navy mt-3 tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-serif text-brand-navy mt-3 tracking-tight">
               Explore Our Premium Fleet
             </h1>
-            <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl font-normal">
-              Choose from our well-maintained cars for self-drive and chauffeur-driven journeys across India. All vehicles include 100% transparent pricing and 24×7 support.
+            <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl font-normal leading-relaxed">
+              Choose from our curated fleet for self-drive and chauffeur-driven road trips across India. All vehicles include 100% transparent pricing and 24×7 roadside assistance.
             </p>
           </div>
 
@@ -114,16 +122,16 @@ export default function FleetPage({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-sm"
+              className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-sm cursor-pointer"
             >
-              <SlidersHorizontal className="w-4 h-4 text-brand-blue" />
+              <SlidersHorizontal className="w-4 h-4 text-amber-600" />
               <span>Filters</span>
             </button>
 
             {/* Sort Dropdown */}
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-sm text-xs font-bold text-slate-800">
-              <ArrowUpDown className="w-4 h-4 text-brand-blue" />
-              <span>Sort:</span>
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm text-xs font-bold text-slate-800">
+              <ArrowUpDown className="w-4 h-4 text-amber-600" />
+              <span className="text-slate-500 font-medium">Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -172,7 +180,7 @@ export default function FleetPage({
               {filteredCars.length === 0 && (
                 <button
                   onClick={handleResetFilters}
-                  className="text-xs font-bold text-brand-blue hover:underline"
+                  className="text-xs font-bold text-amber-600 hover:underline cursor-pointer"
                 >
                   Clear Filters
                 </button>
@@ -196,13 +204,13 @@ export default function FleetPage({
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 my-6">
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/90 shadow-sm my-6">
                 <Car className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-slate-800">No vehicles match your selected filters</h3>
+                <h3 className="text-lg font-serif font-bold text-slate-800">No vehicles match your selected filters</h3>
                 <p className="text-xs text-slate-500 mt-1 mb-6">Try adjusting your price range, seating, or city selection.</p>
                 <button
                   onClick={handleResetFilters}
-                  className="px-6 py-2.5 rounded-2xl bg-brand-navy text-brand-gold font-extrabold text-xs shadow-md"
+                  className="px-6 py-2.5 rounded-full bg-brand-navy text-amber-400 font-bold text-xs shadow-md cursor-pointer hover:bg-slate-900 transition-colors"
                 >
                   Reset All Filters
                 </button>

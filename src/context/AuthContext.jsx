@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userDB, PREDEFINED_SUPER_ADMIN } from '../services/userDatabase';
-import { generateToken, verifyToken, comparePassword } from '../services/jwtAuth';
+import { generateToken, verifyToken } from '../services/jwtAuth';
 
 const AuthContext = createContext();
 
@@ -89,32 +89,22 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * Secure Login Procedure with MongoDB Atlas authentication
+   * Secure Login Procedure via PHP MySQL API Layer
    */
   const login = async ({ email, password }) => {
-    const authResult = await userDB.authenticateUser({ email, password });
-    const dbUser = authResult.user;
-    const jwtToken = authResult.token || generateToken(dbUser);
-
-    setUser(dbUser);
-    setToken(jwtToken);
-
-    triggerPendingIntentResume();
-
-    let redirectUrl = authResult.redirectUrl || '/user/dashboard';
-    if (!authResult.redirectUrl) {
-      if (dbUser.role === 'SUPER_ADMIN') {
-        redirectUrl = '/super-admin/dashboard';
-      } else if (dbUser.role === 'ADMIN') {
-        redirectUrl = '/admin/dashboard';
-      }
+    try {
+      const result = await userDB.login({ email, password });
+      setUser(result.user);
+      setToken(result.token);
+      triggerPendingIntentResume();
+      return result;
+    } catch (err) {
+      throw err;
     }
-
-    return { user: dbUser, token: jwtToken, redirectUrl };
   };
 
   /**
-   * Public Registration Procedure
+   * Public Registration Procedure via PHP MySQL API Layer
    */
   const register = async ({ name, email, mobile, password, confirmPassword }) => {
     if (password !== confirmPassword) {
@@ -125,8 +115,8 @@ export function AuthProvider({ children }) {
       throw new Error('Password must be at least 6 characters long.');
     }
 
-    const { user: unverifiedUser, emailDelivery, mobileDelivery } = await userDB.registerUser({ name, email, mobile, password });
-    return { user: unverifiedUser, requiresVerification: true, emailDelivery, mobileDelivery };
+    const { user: unverifiedUser, emailDelivery } = await userDB.registerUser({ name, email, mobile, password, confirmPassword });
+    return { user: unverifiedUser, requiresVerification: true, emailDelivery };
   };
 
   /**

@@ -36,12 +36,12 @@ export default function AdminDashboardPage({ onExitAdmin }) {
   const [vehImageUrl, setVehImageUrl] = useState('');
   const [vehStatus, setVehStatus] = useState('AVAILABLE');
 
-  const refreshVehicles = () => {
-    setVehiclesList(vehicleDB.getVehicles());
+  const refreshVehicles = async () => {
+    setVehiclesList(await vehicleDB.getVehicles());
   };
 
-  const refreshBookings = () => {
-    setBookingsList(bookingDB.getBookings());
+  const refreshBookings = async () => {
+    setBookingsList(await bookingDB.getBookings());
   };
 
   useEffect(() => {
@@ -50,47 +50,51 @@ export default function AdminDashboardPage({ onExitAdmin }) {
   }, []);
 
   // Handle Save Vehicle (Add / Edit)
-  const handleSaveVehicleSubmit = (e) => {
+  const handleSaveVehicleSubmit = async (e) => {
     e.preventDefault();
     if (!vehName.trim()) return;
 
     const imgArray = vehImageUrl.trim() ? [vehImageUrl.trim()] : ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80'];
 
-    if (editingVehicleId) {
-      vehicleDB.updateVehicle(editingVehicleId, {
-        name: vehName,
-        brand: vehBrand,
-        model: vehModel || vehName,
-        category: vehCategory,
-        regNumber: vehRegNumber,
-        fuelType: vehFuelType,
-        transmission: vehTransmission,
-        seats: Number(vehSeats),
-        pricePerDay: Number(vehPricePerDay),
-        location: vehLocation,
-        images: imgArray,
-        status: vehStatus
-      });
-    } else {
-      vehicleDB.addVehicle({
-        name: vehName,
-        brand: vehBrand,
-        model: vehModel || vehName,
-        category: vehCategory,
-        regNumber: vehRegNumber,
-        fuelType: vehFuelType,
-        transmission: vehTransmission,
-        seats: Number(vehSeats),
-        pricePerDay: Number(vehPricePerDay),
-        location: vehLocation,
-        images: imgArray,
-        status: vehStatus
-      });
-    }
+    try {
+      if (editingVehicleId) {
+        await vehicleDB.updateVehicle(editingVehicleId, {
+          name: vehName,
+          brand: vehBrand,
+          model: vehModel || vehName,
+          category: vehCategory,
+          regNumber: vehRegNumber,
+          fuelType: vehFuelType,
+          transmission: vehTransmission,
+          seats: Number(vehSeats),
+          pricePerDay: Number(vehPricePerDay),
+          location: vehLocation,
+          images: imgArray,
+          status: vehStatus
+        });
+      } else {
+        await vehicleDB.addVehicle({
+          name: vehName,
+          brand: vehBrand,
+          model: vehModel || vehName,
+          category: vehCategory,
+          regNumber: vehRegNumber,
+          fuelType: vehFuelType,
+          transmission: vehTransmission,
+          seats: Number(vehSeats),
+          pricePerDay: Number(vehPricePerDay),
+          location: vehLocation,
+          images: imgArray,
+          status: vehStatus
+        });
+      }
 
-    setShowVehicleModal(false);
-    setEditingVehicleId(null);
-    refreshVehicles();
+      setShowVehicleModal(false);
+      setEditingVehicleId(null);
+      await refreshVehicles();
+    } catch (err) {
+      alert(err.message || 'Failed to save vehicle');
+    }
   };
 
   const handleOpenEditVehicle = (veh) => {
@@ -110,21 +114,33 @@ export default function AdminDashboardPage({ onExitAdmin }) {
     setShowVehicleModal(true);
   };
 
-  const handleToggleVehicleStatus = (vehId, nextStatus) => {
-    vehicleDB.setVehicleStatus(vehId, nextStatus);
-    refreshVehicles();
+  const handleToggleVehicleStatus = async (vehId, nextStatus) => {
+    try {
+      await vehicleDB.setVehicleStatus(vehId, nextStatus);
+      await refreshVehicles();
+    } catch (err) {
+      alert(err.message || 'Failed to update vehicle status');
+    }
   };
 
-  const handleDeleteVehicle = (vehId) => {
+  const handleDeleteVehicle = async (vehId) => {
     if (!window.confirm('Are you sure you want to delete this vehicle from fleet?')) return;
-    vehicleDB.deleteVehicle(vehId);
-    refreshVehicles();
+    try {
+      await vehicleDB.deleteVehicle(vehId);
+      await refreshVehicles();
+    } catch (err) {
+      alert(err.message || 'Failed to delete vehicle');
+    }
   };
 
   // Booking Actions
-  const handleUpdateBookingStatus = (bookingId, newStatus) => {
-    bookingDB.updateBookingStatus(bookingId, newStatus);
-    refreshBookings();
+  const handleUpdateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      await bookingDB.updateBookingStatus(bookingId, newStatus);
+      await refreshBookings();
+    } catch (err) {
+      alert(err.message || 'Failed to update booking status');
+    }
   };
 
   const filteredBookingsList = bookingsList.filter(b => 

@@ -1,7 +1,7 @@
 /**
  * Vite Server Backend Middleware Plugin
- * Intercepts /api/health and /api/auth/* routes for local development (`npm run dev`)
- * and preview mode (`npm run preview`).
+ * Intercepts /api/auth/* routes and executes real server-side OTP dispatch via Resend & Fast2SMS.
+ * Works seamlessly in both dev mode (`npm run dev`) and preview mode (`npm run preview`).
  */
 
 import {
@@ -12,21 +12,9 @@ import {
   handleResendEmailOtp,
   handleResendMobileOtp
 } from './otpBackend.js';
-import { handleRegisterUser, handleLoginUser } from './authHandlers.js';
-import { checkDatabaseConnection } from './mongodb.js';
 
 function parseRequestBody(req) {
   return new Promise((resolve) => {
-    if (req.body && typeof req.body === 'object') {
-      return resolve(req.body);
-    }
-    if (req.body && typeof req.body === 'string') {
-      try {
-        return resolve(JSON.parse(req.body));
-      } catch {
-        return resolve({});
-      }
-    }
     let body = '';
     req.on('data', (chunk) => {
       body += chunk.toString();
@@ -37,9 +25,6 @@ function parseRequestBody(req) {
       } catch {
         resolve({});
       }
-    });
-    req.on('error', () => {
-      resolve({});
     });
   });
 }
@@ -59,35 +44,6 @@ export function otpBackendPlugin() {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ? req.url.split('?')[0] : '';
 
-        // 1. Health check endpoint
-        if (url === '/api/health') {
-          if (req.method !== 'GET' && req.method !== 'HEAD') {
-            return sendJsonResponse(res, 405, {
-              success: false,
-              message: 'Method Not Allowed. Use GET for health status.'
-            });
-          }
-          try {
-            const dbStatus = await checkDatabaseConnection();
-            return sendJsonResponse(res, 200, {
-              success: true,
-              message: 'Siddhivinayak API is running',
-              database: dbStatus.connected ? 'connected' : 'disconnected',
-              databaseMessage: dbStatus.message,
-              timestamp: new Date().toISOString()
-            });
-          } catch (err) {
-            return sendJsonResponse(res, 500, {
-              success: false,
-              message: 'Siddhivinayak API encountered an error checking health',
-              database: 'disconnected',
-              error: err.message,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-
-        // 2. Auth OTP endpoints
         if (!url.startsWith('/api/auth/')) {
           return next();
         }
@@ -98,16 +54,6 @@ export function otpBackendPlugin() {
 
         try {
           const body = await parseRequestBody(req);
-
-          if (url === '/api/auth/register') {
-            const result = await handleRegisterUser(body);
-            return sendJsonResponse(res, result.status, result.data);
-          }
-
-          if (url === '/api/auth/login') {
-            const result = await handleLoginUser(body);
-            return sendJsonResponse(res, result.status, result.data);
-          }
 
           if (url === '/api/auth/send-email-otp') {
             const result = await handleSendEmailOtp(body);

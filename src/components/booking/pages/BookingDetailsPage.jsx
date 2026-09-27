@@ -90,11 +90,11 @@ export default function BookingDetailsPage({ onNavigate }) {
 
           {/* Page Title */}
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+            <h1 className="text-2xl sm:text-4xl font-serif text-white flex items-center gap-2">
               <MapPin className="w-7 h-7 text-amber-400" />
               Step 2: Trip Configuration & Passenger Details
             </h1>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
               Select your rental mode, route locations, and verify customer credentials.
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function BookingDetailsPage({ onNavigate }) {
             </div>
 
             {/* Route & Delivery Options Card */}
-            <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+            <div className="bg-[#0B192C]/85 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               <h2 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> Route & Delivery Options
               </h2>
@@ -136,10 +136,10 @@ export default function BookingDetailsPage({ onNavigate }) {
                   <select
                     value={bookingData.pickupCity}
                     onChange={(e) => updateBookingData({ pickupCity: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-[#060D17] border border-slate-700/80 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
                   >
                     {CITIES.map((c) => (
-                      <option key={c} value={c}>
+                      <option key={c} value={c} className="bg-slate-900 text-white">
                         📍 {c}
                       </option>
                     ))}
@@ -153,10 +153,10 @@ export default function BookingDetailsPage({ onNavigate }) {
                   <select
                     value={bookingData.returnCity}
                     onChange={(e) => updateBookingData({ returnCity: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-[#060D17] border border-slate-700/80 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
                   >
                     {CITIES.map((c) => (
-                      <option key={c} value={c}>
+                      <option key={c} value={c} className="bg-slate-900 text-white">
                         🏁 {c}
                       </option>
                     ))}
@@ -169,7 +169,7 @@ export default function BookingDetailsPage({ onNavigate }) {
                 <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block mb-1.5">
                   Vehicle Pickup / Delivery Method
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[
                     'Doorstep Delivery',
                     'Airport Pickup',
@@ -180,10 +180,10 @@ export default function BookingDetailsPage({ onNavigate }) {
                       key={opt}
                       type="button"
                       onClick={() => updateBookingData({ deliveryOption: opt })}
-                      className={`p-3 rounded-2xl text-xs font-bold border transition-all text-left flex items-center justify-between ${
+                      className={`p-3 rounded-xl text-xs font-bold border transition-all text-left flex items-center justify-between cursor-pointer ${
                         bookingData.deliveryOption === opt
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400/30'
+                          : 'bg-[#060D17] border-slate-800 text-slate-300 hover:border-slate-700'
                       }`}
                     >
                       <span>{opt}</span>
@@ -221,7 +221,7 @@ export default function BookingDetailsPage({ onNavigate }) {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] cursor-pointer"
               >
                 Continue to Travel Schedule (Step 3)
                 <ArrowRight className="w-5 h-5" />

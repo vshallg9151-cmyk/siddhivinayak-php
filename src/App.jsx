@@ -169,14 +169,18 @@ function MainAppContent() {
       if (window.location.pathname.startsWith('/details/')) {
         const paramId = window.location.pathname.split('/details/')[1];
         if (paramId) {
-          const dbVehicles = vehicleDB.getVehicles();
-          const match = dbVehicles.find(v => v.id === paramId || v.name.toLowerCase().includes(paramId.toLowerCase())) ||
-                        FLEET_CARS.find(c => c.id === paramId || c.name.toLowerCase().includes(paramId.toLowerCase()));
-          if (match) {
-            setSelectedCarForDetails(match);
-          } else {
-            setSelectedCarForDetails(null); // Triggers ItemNotFoundPage
-          }
+          vehicleDB.getVehicles().then(dbVehicles => {
+            const match = dbVehicles.find(v => v.id === paramId || v.name.toLowerCase().includes(paramId.toLowerCase())) ||
+                          FLEET_CARS.find(c => c.id === paramId || c.name.toLowerCase().includes(paramId.toLowerCase()));
+            if (match) {
+              setSelectedCarForDetails(match);
+            } else {
+              setSelectedCarForDetails(null); // Triggers ItemNotFoundPage
+            }
+          }).catch(err => {
+            const match = FLEET_CARS.find(c => c.id === paramId || c.name.toLowerCase().includes(paramId.toLowerCase()));
+            setSelectedCarForDetails(match || null);
+          });
         }
       }
     };

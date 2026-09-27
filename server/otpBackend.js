@@ -16,7 +16,6 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import nodemailer from 'nodemailer';
-import { activateMongoUserEmail } from './userModel.js';
 
 // Helper to load server-side .env file if present
 function loadEnvConfig() {
@@ -27,7 +26,7 @@ function loadEnvConfig() {
     SMTP_PORT: process.env.SMTP_PORT || '587',
     SMTP_SECURE: process.env.SMTP_SECURE === 'true',
     SMTP_USER: process.env.SMTP_USER || process.env.EMAIL_USER || null,
-    SMTP_PASS: process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, '') : (process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : null),
+    SMTP_PASS: process.env.SMTP_PASS || process.env.EMAIL_PASS || null,
     SMTP_FROM: process.env.SMTP_FROM || process.env.EMAIL_FROM || null,
     SMTP_SERVICE: process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || null,
 
@@ -38,10 +37,6 @@ function loadEnvConfig() {
     // SMS Configuration (Fast2SMS)
     FAST2SMS_API_KEY: process.env.FAST2SMS_API_KEY || null,
     FAST2SMS_SENDER_ID: process.env.FAST2SMS_SENDER_ID || 'SDVTUR',
-
-    // OTP & Database
-    OTP_SECRET: process.env.OTP_SECRET || null,
-    MONGODB_URI: process.env.MONGODB_URI || null,
 
     // Environment
     NODE_ENV: process.env.NODE_ENV || 'development'
@@ -72,14 +67,6 @@ function loadEnvConfig() {
           if (key === 'RESEND_FROM_EMAIL') config.RESEND_FROM_EMAIL = val;
           if (key === 'FAST2SMS_API_KEY') config.FAST2SMS_API_KEY = val;
           if (key === 'FAST2SMS_SENDER_ID') config.FAST2SMS_SENDER_ID = val;
-          if (key === 'OTP_SECRET') {
-            config.OTP_SECRET = val;
-            process.env.OTP_SECRET = val;
-          }
-          if (key === 'MONGODB_URI') {
-            config.MONGODB_URI = val;
-            process.env.MONGODB_URI = val;
-          }
           if (key === 'NODE_ENV') config.NODE_ENV = val;
         }
       }
@@ -101,14 +88,7 @@ const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_FAILED_ATTEMPTS = 5;
 const MAX_REQUESTS_PER_HOUR = 10;
-
-/**
- * Dynamically resolves the OTP secret from environment variable
- */
-function getOtpSecret() {
-  loadEnvConfig();
-  return process.env.OTP_SECRET || 'siddhivinayak-tours-otp-secret-key-2026';
-}
+const OTP_SECRET = process.env.OTP_SECRET || process.env.JWT_SECRET || 'siddhivinayak-tours-otp-secret-key-2026';
 
 /**
  * Generate cryptographically secure 6-digit numeric OTP
@@ -131,7 +111,7 @@ function createStatelessOtpToken(identifier, rawOtp, timestamp = Date.now()) {
   const cleanId = (identifier || '').toString().trim().toLowerCase();
   const cleanOtp = (rawOtp || '').toString().trim();
   const payload = `${cleanId}:${cleanOtp}:${timestamp}`;
-  const hmac = crypto.createHmac('sha256', getOtpSecret()).update(payload).digest('hex');
+  const hmac = crypto.createHmac('sha256', OTP_SECRET).update(payload).digest('hex');
   return `${timestamp}.${hmac}`;
 }
 
@@ -163,7 +143,7 @@ function verifyStatelessOtpToken(identifier, inputOtp, otpToken) {
   const cleanId = (identifier || '').toString().trim().toLowerCase();
   const cleanOtp = (inputOtp || '').toString().trim();
   const expectedPayload = `${cleanId}:${cleanOtp}:${timestampStr}`;
-  const expectedHmac = crypto.createHmac('sha256', getOtpSecret()).update(expectedPayload).digest('hex');
+  const expectedHmac = crypto.createHmac('sha256', OTP_SECRET).update(expectedPayload).digest('hex');
 
   const bufA = Buffer.from(tokenHmac, 'hex');
   const bufB = Buffer.from(expectedHmac, 'hex');
@@ -226,28 +206,24 @@ function validateEmailServer(email) {
  * Create Nodemailer SMTP Transporter
  */
 function createSmtpTransporter(env) {
-  const cleanPass = (env.SMTP_PASS || '').replace(/\s+/g, '');
-
   if (env.SMTP_SERVICE) {
     return nodemailer.createTransport({
       service: env.SMTP_SERVICE,
       auth: {
         user: env.SMTP_USER,
-        pass: cleanPass
+        pass: env.SMTP_PASS
       }
     });
   }
 
-  if (env.SMTP_HOST && env.SMTP_USER && cleanPass) {
-    const isPort465 = env.SMTP_PORT === '465' || env.SMTP_PORT === 465;
-    const isSecure = env.SMTP_SECURE === true || env.SMTP_SECURE === 'true' || isPort465;
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     return nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: parseInt(env.SMTP_PORT, 10) || 587,
-      secure: isSecure,
+      secure: env.SMTP_SECURE === true || env.SMTP_PORT === '465' || env.SMTP_PORT === 465,
       auth: {
         user: env.SMTP_USER,
-        pass: cleanPass
+        pass: env.SMTP_PASS
       }
     });
   }
@@ -492,11 +468,6 @@ export async function handleVerifyEmailOtp(body) {
     const tokenResult = verifyStatelessOtpToken(cleanEmail, cleanOtp, otpToken);
     if (tokenResult.valid) {
       console.log(`[OTP VERIFIED STATELESS] Recipient: ${cleanEmail} | Status: SUCCESS | Account Activated`);
-      try {
-        await activateMongoUserEmail(cleanEmail);
-      } catch (dbErr) {
-        console.warn('[OTP VERIFY] MongoDB account activation warning:', dbErr.message);
-      }
       return {
         status: 200,
         data: {
@@ -564,11 +535,6 @@ export async function handleVerifyEmailOtp(body) {
   record.used = true;
 
   console.log(`[OTP VERIFIED STATEFUL] Recipient: ${cleanEmail} | Status: SUCCESS | Account Activated`);
-  try {
-    await activateMongoUserEmail(cleanEmail);
-  } catch (dbErr) {
-    console.warn('[OTP VERIFY] MongoDB account activation warning:', dbErr.message);
-  }
 
   return {
     status: 200,
